@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+
+@layer base {
+  body { @apply bg-cream-50 text-gray-900 font-sans; min-height: 100vh; }
+}
+
+@layer utilities {
+  .text-gradient-brand {
+    background: linear-gradient(90deg, #1CB64E, #0D8F2F);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .text-gradient-accent {
+    background: linear-gradient(90deg, #FFA22A, #EB5C0C);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .float-soft { animation: floatSoft 6s ease-in-out infinite; }
+}
+
+@keyframes floatSoft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@layer components {
+  .btn-primary { @apply bg-brand-600 hover:bg-brand-700 text-white px-6 py-3 rounded-lg font-medium transition; }
+  .btn-primary-gradient { @apply text-white px-6 py-3 rounded-lg font-semibold shadow-sm hover:opacity-95 transition bg-brand-gradient; }
+  .btn-accent { @apply bg-accent-600 hover:bg-accent-700 text-white px-6 py-3 rounded-lg font-medium transition; }
+  .btn-accent-gradient { @apply text-white px-6 py-3 rounded-lg font-semibold shadow-sm hover:opacity-95 transition bg-accent-gradient; }
+  .btn-secondary { @apply bg-white hover:bg-cream-50 text-brand-700 border border-cream-300 px-6 py-3 rounded-lg font-medium transition; }
+  .card { @apply bg-white rounded-xl border border-cream-200 p-6 shadow-soft; }
+  .badge { @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-cream-100 text-brand-700 border border-cream-200; }
+  .input-field { @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition; }
+  .link { @apply text-brand-700 hover:text-brand-800 underline-offset-4 hover:underline; }
+}
