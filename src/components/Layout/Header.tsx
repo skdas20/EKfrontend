@@ -1,4 +1,4 @@
-import { ShoppingCart, Search, User, LogOut, MapPin, Package, X } from 'lucide-react'
+import { ShoppingCart, Search, User, LogOut, MapPin, Package, X, Home, HelpCircle, Smartphone } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
@@ -7,6 +7,7 @@ import CartDrawer from '../Cart/CartDrawer'
 import LoginModal from '../Auth/LoginModal'
 import PincodeModal from '../Location/PincodeModal'
 import OrderHistory from '../Orders/OrderHistory'
+import SavedAddresses from '../Address/SavedAddresses'
 
 /* ===========================================
    EasyKirana SVG Logo for Header (with shine)
@@ -146,6 +147,7 @@ export default function Header() {
   const [isPincodeOpen, setIsPincodeOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showOrderHistory, setShowOrderHistory] = useState(false)
+  const [showSavedAddresses, setShowSavedAddresses] = useState(false)
   const { state } = useCart()
   const { user, logout, isLoginModalOpen, showLoginModal, hideLoginModal } = useAuth()
   const { pincode } = useLocation()
@@ -161,8 +163,18 @@ export default function Header() {
         window.setTimeout(() => window.dispatchEvent(new CustomEvent('openCart', { detail })), 50)
       }
     }
+
+    const showOrderHistoryListener = () => {
+      setShowOrderHistory(true)
+    }
+
     window.addEventListener('openCart', openCartListener as EventListener)
-    return () => window.removeEventListener('openCart', openCartListener as EventListener)
+    window.addEventListener('showOrderHistory', showOrderHistoryListener as EventListener)
+
+    return () => {
+      window.removeEventListener('openCart', openCartListener as EventListener)
+      window.removeEventListener('showOrderHistory', showOrderHistoryListener as EventListener)
+    }
   }, [])
 
   useEffect(() => {
@@ -201,15 +213,18 @@ export default function Header() {
     }
   }, [showUserMenu])
 
-  // Prevent body scroll when My Orders modal is open
+  // Prevent body scroll when modals are open
   useEffect(() => {
-    if (showOrderHistory) document.body.style.overflow = 'hidden'
-    else document.body.style.overflow = 'unset'
+    if (showOrderHistory || showSavedAddresses) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
     return () => { document.body.style.overflow = 'unset' }
-  }, [showOrderHistory])
+  }, [showOrderHistory, showSavedAddresses])
 
   return (
-    <header className="bg-white shadow-sm border-b border-cream-200">
+    <header className="sticky top-0 z-40 bg-white shadow-sm border-b border-cream-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo & Location */}
@@ -285,7 +300,7 @@ export default function Header() {
                 {showUserMenu && (
                   <div
                     ref={(el) => { userMenuDropdownRef.current = el }}
-                    className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-50 border"
+                    className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl z-50 border border-gray-100 overflow-hidden"
                     onMouseEnter={() => {
                       if (userMenuCloseTimeout.current) {
                         window.clearTimeout(userMenuCloseTimeout.current)
@@ -304,31 +319,131 @@ export default function Header() {
                       }, 250)
                     }}
                   >
-                    <div className="py-1">
-                      <div className="px-4 py-3 text-sm text-gray-700 border-b">
-                        <p className="font-medium">{user.name || user.phone}</p>
-                        <p className="text-gray-500">{user.name ? user.phone : user.role}</p>
+                    {/* User Info Header */}
+                    <div className="px-4 py-4 bg-gradient-to-r from-brand-50 to-cream-50 border-b border-gray-100">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-brand-gradient rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">{user.name || user.phone}</p>
+                          <p className="text-sm text-gray-600">{user.name ? user.phone : user.role}</p>
+                        </div>
                       </div>
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="py-2">
                       <button
                         onClick={() => {
                           setShowOrderHistory(true)
                           setShowUserMenu(false)
                         }}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       >
-                        <Package className="h-4 w-4 mr-2" />
-                        My Orders
+                        <Package className="h-5 w-5 mr-3 text-brand-600" />
+                        <div className="text-left">
+                          <div className="font-medium">My Orders</div>
+                          <div className="text-xs text-gray-500">Track your orders</div>
+                        </div>
                       </button>
+
+                      <button
+                        onClick={() => {
+                          setShowSavedAddresses(true)
+                          setShowUserMenu(false)
+                        }}
+                        className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <Home className="h-5 w-5 mr-3 text-brand-600" />
+                        <div className="text-left">
+                          <div className="font-medium">Saved Addresses</div>
+                          <div className="text-xs text-gray-500">Manage delivery addresses</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          // TODO: Implement FAQ modal or page
+                          console.log('Open FAQ')
+                          setShowUserMenu(false)
+                        }}
+                        className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <HelpCircle className="h-5 w-5 mr-3 text-brand-600" />
+                        <div className="text-left">
+                          <div className="font-medium">FAQ</div>
+                          <div className="text-xs text-gray-500">Get help & support</div>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-t border-gray-100"></div>
+
+                    {/* App Download Section */}
+                    <div className="px-4 py-4 bg-gray-50">
+                      <div className="text-center">
+                        <div className="flex items-center justify-center space-x-2 mb-3">
+                          <Smartphone className="h-4 w-4 text-brand-600" />
+                          <span className="text-sm font-medium text-gray-700">Download Our App</span>
+                        </div>
+
+                        {/* QR Code - Using a placeholder for now */}
+                        <div className="w-20 h-20 mx-auto mb-3 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center">
+                          <svg
+                            width="60"
+                            height="60"
+                            viewBox="0 0 100 100"
+                            className="text-gray-800"
+                          >
+                            {/* Simple QR-like pattern */}
+                            <rect x="10" y="10" width="20" height="20" fill="currentColor" />
+                            <rect x="70" y="10" width="20" height="20" fill="currentColor" />
+                            <rect x="10" y="70" width="20" height="20" fill="currentColor" />
+                            <rect x="40" y="40" width="20" height="20" fill="currentColor" />
+
+                            {/* Small squares pattern */}
+                            <rect x="15" y="15" width="10" height="10" fill="white" />
+                            <rect x="75" y="15" width="10" height="10" fill="white" />
+                            <rect x="15" y="75" width="10" height="10" fill="white" />
+                            <rect x="45" y="45" width="10" height="10" fill="white" />
+
+                            {/* Data pattern */}
+                            <rect x="50" y="10" width="5" height="5" fill="currentColor" />
+                            <rect x="60" y="10" width="5" height="5" fill="currentColor" />
+                            <rect x="50" y="20" width="5" height="5" fill="currentColor" />
+                            <rect x="35" y="25" width="5" height="5" fill="currentColor" />
+                            <rect x="40" y="30" width="5" height="5" fill="currentColor" />
+                            <rect x="65" y="35" width="5" height="5" fill="currentColor" />
+                            <rect x="70" y="40" width="5" height="5" fill="currentColor" />
+                            <rect x="80" y="50" width="5" height="5" fill="currentColor" />
+                            <rect x="35" y="55" width="5" height="5" fill="currentColor" />
+                            <rect x="50" y="65" width="5" height="5" fill="currentColor" />
+                            <rect x="80" y="70" width="5" height="5" fill="currentColor" />
+                            <rect x="45" y="80" width="5" height="5" fill="currentColor" />
+                          </svg>
+                        </div>
+
+                        <p className="text-xs text-gray-600">Scan to download EasyKirana app</p>
+                      </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-t border-gray-100"></div>
+
+                    {/* Sign Out */}
+                    <div className="py-2">
                       <button
                         onClick={() => {
                           logout()
                           setShowUserMenu(false)
                           window.location.reload()
                         }}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       >
-                        <LogOut className="h-4 w-4 mr-2" />
-                        Sign out
+                        <LogOut className="h-5 w-5 mr-3" />
+                        <div className="font-medium">Sign out</div>
                       </button>
                     </div>
                   </div>
@@ -350,9 +465,14 @@ export default function Header() {
             >
               <ShoppingCart className="h-6 w-6" />
               {state.itemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-brand-gradient text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
-                  {state.itemCount}
-                </span>
+                <>
+                  <span className="absolute -top-2 -right-2 bg-brand-gradient text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
+                    {state.itemCount}
+                  </span>
+                  <span className="absolute -bottom-3 -right-4 bg-green-600 text-white rounded text-xs px-1.5 py-0.5 text-[10px] leading-none font-medium shadow-md">
+                    ₹{Number(state.total || 0).toFixed(0)}
+                  </span>
+                </>
               )}
             </button>
           </div>
@@ -401,6 +521,12 @@ export default function Header() {
           </div>
         </div>
       )}
+
+      {/* Saved Addresses Modal */}
+      <SavedAddresses
+        isOpen={showSavedAddresses}
+        onClose={() => setShowSavedAddresses(false)}
+      />
     </header>
   )
 }

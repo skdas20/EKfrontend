@@ -104,6 +104,18 @@ export const productAPI = {
     const params = { ...filters, category_id: categoryId }
     const url = buildApiUrl('/products', params)
     return apiFetch<Product[]>(url)
+  },
+
+  // Get products by subcategory name
+  async getBySubcategory(subcategoryName: string, filters: Omit<ProductFilters, 'subcategory_name'> = {}): Promise<Product[]> {
+    try {
+      const params = { ...filters, subcategory_name: subcategoryName }
+      const url = buildApiUrl('/products', params)
+      return await apiFetch<Product[]>(url)
+    } catch (error) {
+      console.warn('Failed to fetch products for subcategory:', subcategoryName)
+      return []
+    }
   }
 }
 
@@ -130,6 +142,17 @@ export const categoryAPI = {
   async getSubcategories(): Promise<Subcategory[]> {
     const url = buildApiUrl('/subcategories')
     return apiFetch<Subcategory[]>(url)
+  },
+
+  // Get subcategories by category ID
+  async getSubcategoriesByCategory(categoryId: number): Promise<Subcategory[]> {
+    try {
+      const url = buildApiUrl('/subcategories', { category_id: categoryId })
+      return await apiFetch<Subcategory[]>(url)
+    } catch (error) {
+      console.warn('Failed to fetch subcategories for category:', categoryId)
+      return []
+    }
   }
 }
 

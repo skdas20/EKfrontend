@@ -1,4 +1,4 @@
-import { ShoppingCart, Star, Plus, Minus } from 'lucide-react'
+import { ShoppingCart, Plus, Minus } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
@@ -11,7 +11,7 @@ interface ProductCardProps {
   base_price: number
   discounted_price?: number | null
   image_url: string | null
-  category_name: string
+  category_name: string 
   status: 'active' | 'inactive'
 }
 
@@ -28,143 +28,129 @@ export default function ProductCard({
   const { addItem, updateQuantity, getItemQuantity, state } = useCart()
   const { user, showLoginModal } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
-  
+
   const inStock = status === 'active'
-  
-  // Safely convert prices to numbers (handles both string and number inputs)
+
   const basePrice = typeof base_price === 'string' ? parseFloat(base_price) : Number(base_price)
   const discountPrice = discounted_price ? (typeof discounted_price === 'string' ? parseFloat(discounted_price) : Number(discounted_price)) : null
   const currentPrice = discountPrice || basePrice
-  
+
   const quantity = getItemQuantity(product_id)
-  
-  // Find the cart item for this product
   const cartItem = state.items.find(item => item.product_id === product_id)
 
   const handleAddToCart = async () => {
     if (!inStock) return
-    
-    // If user is not logged in, show login modal
     if (!user) {
       showLoginModal()
       return
     }
-    
     setIsLoading(true)
-    await addItem(
-      product_id,
-      product_name, 
-      basePrice,
-      discountPrice,
-      image_url
-    )
+    await addItem(product_id, product_name, basePrice, discountPrice, image_url)
     setIsLoading(false)
   }
 
   const handleUpdateQuantity = async (newQuantity: number) => {
     if (!cartItem) return
-    
     setIsLoading(true)
     await updateQuantity(cartItem.cart_id, newQuantity)
     setIsLoading(false)
   }
+
   const handleCardClick = (e: React.MouseEvent) => {
-    // Prevent card click when clicking on interactive elements
     const target = e.target as HTMLElement
-    if (target.closest('button') || target.closest('input')) {
+    if (target.closest('button')) {
       return
     }
     navigate(`/product/${product_id}`)
   }
 
   return (
-    <div 
-      className="card hover:shadow-md transition-shadow duration-200 cursor-pointer"
+    <div
+      className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col cursor-pointer overflow-hidden group"
       onClick={handleCardClick}
     >
-      <div className="relative">
-        <img
-          src={image_url || 'https://via.placeholder.com/300x200/f3f4f6/9ca3af?text=No+Image'}
-          alt={product_name}
-          className="w-full h-48 object-cover rounded-t-lg"
-          onError={(e) => {
-            e.currentTarget.src = 'https://via.placeholder.com/300x200/f3f4f6/9ca3af?text=No+Image'
-          }}
-        />
+      {/* --- Image Section --- */}
+      <div className="relative p-1.5">
+        <div className="aspect-square w-full relative">
+            <img
+            src={image_url || 'https://via.placeholder.com/200/f3f4f6/9ca3af?text=No+Image'}
+            alt={product_name}
+            className="w-full h-full object-contain"
+            onError={(e) => {
+                e.currentTarget.src = 'https://via.placeholder.com/200/f3f4f6/9ca3af?text=No+Image'
+            }}
+            />
+        </div>
         {!inStock && (
-          <div className="absolute inset-0 bg-gray-100/90 flex items-center justify-center rounded-t-lg">
-            <span className="text-gray-800 font-semibold">Out of Stock</span>
+          <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg">
+            <span className="bg-gray-700 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">OUT OF STOCK</span>
           </div>
         )}
-        {discountPrice && (
-          <div className="absolute top-2 left-2 bg-accent-gradient text-white text-sm px-2 py-1 rounded font-semibold shadow-sm">
-            {Math.round(((basePrice - discountPrice) / basePrice) * 100)}% OFF
-          </div>
+        {discountPrice && inStock && (
+            <div className="absolute top-1 left-1 bg-red-500 text-white text-[9px] font-bold px-1 py-0.5 rounded">
+                {Math.round(((basePrice - discountPrice) / basePrice) * 100)}% OFF
+            </div>
         )}
       </div>
-      
-      <div className="p-4">
-        <p className="text-sm text-gray-500 mb-1">{category_name}</p>
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{product_name}</h3>
+
+      {/* --- Content Section --- */}
+      <div className="px-2 pb-2 flex flex-col flex-grow">
+        <div className="flex-grow">
+            <h3 className="font-medium text-gray-800 text-xs mb-1 line-clamp-2 h-8 leading-tight">{product_name}</h3>
+        </div>
         
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-lg font-bold text-gray-900">₹{Number(currentPrice || 0).toFixed(2)}</span>
+        {/* --- Price and Action Section --- */}
+        <div className="flex items-center justify-between mt-auto">
+          <div className="flex flex-col">
             {discountPrice && (
-              <span className="text-sm text-gray-500 line-through">₹{Number(basePrice || 0).toFixed(2)}</span>
+              <span className="text-[10px] text-gray-400 line-through leading-none">
+                ₹{basePrice.toFixed(0)}
+              </span>
+            )}
+            <span className="text-sm font-bold text-gray-900 leading-none">
+              ₹{currentPrice.toFixed(0)}
+            </span>
+          </div>
+
+          <div className="w-16 h-7 flex items-center justify-end">
+             {quantity > 0 ? (
+                <div className="flex items-center justify-between w-full h-full border border-green-500 rounded bg-green-50">
+                   <button
+                        onClick={() => handleUpdateQuantity(quantity - 1)}
+                        disabled={isLoading}
+                        className="px-1 text-green-600 hover:text-red-500 disabled:opacity-50 h-full flex items-center"
+                        aria-label="Decrease quantity"
+                    >
+                        <Minus className="h-3 w-3" />
+                    </button>
+                    <span className="px-1 text-xs font-bold text-green-700">
+                      {isLoading ? <LoadingSpinner size="sm" /> : quantity}
+                    </span>
+                    <button
+                        onClick={() => handleUpdateQuantity(quantity + 1)}
+                        disabled={isLoading}
+                        className="px-1 text-green-600 hover:text-green-700 disabled:opacity-50 h-full flex items-center"
+                        aria-label="Increase quantity"
+                    >
+                        <Plus className="h-3 w-3" />
+                    </button>
+                </div>
+            ) : (
+                <button
+                    onClick={handleAddToCart}
+                    disabled={!inStock || isLoading}
+                    className={`w-full h-full flex items-center justify-center text-[10px] font-bold border rounded transition-all duration-200 ${
+                        inStock
+                        ? 'border-green-600 text-green-600 bg-white hover:bg-green-600 hover:text-white'
+                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    }`}
+                    aria-label="Add to cart"
+                    >
+                    {isLoading ? <LoadingSpinner size="sm" /> : 'ADD'}
+                </button>
             )}
           </div>
         </div>
-        
-        {/* Cart Controls */}
-        {quantity > 0 ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => handleUpdateQuantity(quantity - 1)}
-                disabled={isLoading}
-                className="p-2 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
-              >
-                <Minus className="h-4 w-4 text-gray-600" />
-              </button>
-              
-              <span className="px-3 py-1 bg-white rounded text-sm font-medium min-w-[3rem] text-center">
-                {isLoading ? <LoadingSpinner size="sm" /> : quantity}
-              </span>
-              
-              <button
-                onClick={() => handleUpdateQuantity(quantity + 1)}
-                disabled={isLoading}
-                className="p-2 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
-              >
-                <Plus className="h-4 w-4 text-gray-600" />
-              </button>
-            </div>
-            
-            {user && (
-              <span className="text-xs text-green-600 font-medium">In Cart</span>
-            )}
-          </div>
-        ) : (
-          <button 
-            onClick={handleAddToCart}
-            disabled={!inStock || isLoading}
-            className={`w-full py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2 ${
-              inStock
-                ? 'btn-primary'
-                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            {isLoading ? (
-              <LoadingSpinner size="sm" className="text-white" />
-            ) : (
-              <>
-                <ShoppingCart className="h-4 w-4" />
-                <span>{inStock ? 'Add to Cart' : 'Out of Stock'}</span>
-              </>
-            )}
-          </button>
-        )}
       </div>
     </div>
   )

@@ -49,8 +49,8 @@ export default function ProductGrid() {
             <p className="text-gray-600">Discover our best-selling items and daily specials</p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            {[...Array(8)].map((_, i) => (
               <div key={i} className="card animate-pulse">
                 <div className="h-48 bg-gray-200 rounded-t-lg"></div>
                 <div className="p-4">
@@ -106,7 +106,7 @@ export default function ProductGrid() {
         
         {products.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {products.map((product) => {
                 const primaryImage = product.images?.find(img => img.is_primary)?.image_url
                 const fallbackImage = product.images?.[0]?.image_url

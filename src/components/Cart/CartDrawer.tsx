@@ -1,9 +1,9 @@
 import { X, Plus, Minus, ShoppingBag } from 'lucide-react'
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
 import { LoadingSpinner } from '../Loading/LoadingPage'
-import CheckoutModal from '../Checkout/CheckoutModal'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -14,32 +14,23 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { state, updateQuantity, removeItem } = useCart()
   const { user, showLoginModal } = useAuth()
   const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set())
-  const [showCheckout, setShowCheckout] = useState(false)
-  const [checkoutOpenedViaButton, setCheckoutOpenedViaButton] = useState(false)
-
-  // Debug logging for showCheckout changes
-  useEffect(() => {
-    console.log('CartDrawer: showCheckout changed to:', showCheckout)
-  }, [showCheckout])
+  const navigate = useNavigate()
 
   // Listen for global events to open the cart drawer or checkout
   useEffect(() => {
     const openCartHandler = (e: Event) => {
       // event detail may include openCheckout flag
       const detail = (e as CustomEvent)?.detail || {}
-      // We cannot directly change parent isOpen prop from here; instead
-      // dispatch a new custom event that the Header (owner of isOpen) can
-      // listen to. We'll only handle opening the internal checkout modal
-      // when the drawer is already open.
+      // If checkout should be opened and drawer is open, navigate to checkout page
       if (detail.openCheckout && isOpen) {
-        setShowCheckout(true)
-        setCheckoutOpenedViaButton(false) // Opened via external event, not button
+        onClose() // Close the drawer
+        navigate('/checkout') // Navigate to checkout page
       }
     }
 
     window.addEventListener('openCart', openCartHandler as EventListener)
     return () => window.removeEventListener('openCart', openCartHandler as EventListener)
-  }, [isOpen])
+  }, [isOpen, onClose, navigate])
 
   const handleUpdateQuantity = async (cartId: string, newQuantity: number) => {
     setLoadingItems(prev => new Set(prev).add(cartId))
@@ -157,11 +148,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               </div>
               
               {user ? (
-                <button 
+                <button
                   className="w-full btn-primary"
                   onClick={() => {
-                    setShowCheckout(true)
-                    setCheckoutOpenedViaButton(true) // Opened via button click
+                    onClose() // Close the drawer
+                    navigate('/checkout') // Navigate to checkout page
                   }}
                 >
                   Proceed to Checkout
@@ -187,27 +178,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         </div>
       </div>
     </div>
-
-      {/* Checkout Modal - moved outside cart drawer to avoid backdrop interference */}
-      <CheckoutModal 
-        isOpen={showCheckout}
-        onClose={() => {
-          console.log('CartDrawer: CheckoutModal onClose called')
-          console.log('CartDrawer: checkoutOpenedViaButton =', checkoutOpenedViaButton)
-          console.log('CartDrawer: showCheckout before setShowCheckout =', showCheckout)
-          setShowCheckout(false)
-          console.log('CartDrawer: called setShowCheckout(false)')
-          // Only close the cart drawer if checkout was opened via the "Proceed to Checkout" button
-          // Don't close if opened via reorder (external openCart event)
-          if (checkoutOpenedViaButton) {
-            console.log('CartDrawer: closing cart drawer because opened via button')
-            onClose()
-          } else {
-            console.log('CartDrawer: NOT closing cart drawer because opened via event')
-          }
-          setCheckoutOpenedViaButton(false) // Reset for next time
-        }}
-      />
     </React.Fragment>
   )
 }

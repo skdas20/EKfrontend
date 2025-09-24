@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Grid, List, Filter, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/Product/ProductCard'
+import SubCategoryCarousel from '../components/Categories/SubCategoryCarousel'
 import { LoadingSpinner } from '../components/Loading/LoadingPage'
 import { productAPI, categoryAPI } from '../services/api'
 import { useLocation } from '../context/LocationContext'
@@ -10,6 +11,7 @@ import type { Product, InternalCategory } from '../types/api'
 export default function CategoryPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { pincode } = useLocation()
 
   const [products, setProducts] = useState<Product[]>([])
@@ -19,6 +21,42 @@ export default function CategoryPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortBy, setSortBy] = useState<'name' | 'price_low' | 'price_high'>('name')
   const [showFilters, setShowFilters] = useState(false)
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null)
+
+  const currentSubCategory = searchParams.get('subcategory') ? parseInt(searchParams.get('subcategory')!) : null
+
+  // Function to fetch products based on category and subcategory
+  const fetchProducts = async () => {
+    if (!id) return
+
+    try {
+      setLoading(true)
+
+      // Determine which API to call based on subcategory selection
+      let productsData: Product[]
+
+      if (selectedSubcategory) {
+        // Fetch products by subcategory name
+        productsData = pincode
+          ? await productAPI.getBySubcategory(selectedSubcategory, { pincode })
+          : await productAPI.getBySubcategory(selectedSubcategory)
+      } else {
+        // Fetch products by category
+        productsData = pincode
+          ? await productAPI.getByLocation(pincode, { category_id: parseInt(id) })
+          : await productAPI.getAll({ category_id: parseInt(id) })
+      }
+
+      setProducts(productsData)
+      setError(null)
+    } catch (err) {
+      console.error('Error fetching products:', err)
+      setError('Failed to load products')
+      setProducts([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     const fetchCategoryData = async () => {
@@ -27,15 +65,10 @@ export default function CategoryPage() {
       try {
         setLoading(true)
 
-        // Fetch category details and products in parallel
-        const [categoryData, productsData] = await Promise.all([
-          categoryAPI.getAll().then(categories =>
-            categories.find(cat => cat.id.toString() === id)
-          ),
-          pincode
-            ? productAPI.getByLocation(pincode, { category_id: parseInt(id) })
-            : productAPI.getAll({ category_id: parseInt(id) })
-        ])
+        // Fetch category details
+        const categoryData = await categoryAPI.getAll().then(categories =>
+          categories.find(cat => cat.id.toString() === id)
+        )
 
         if (categoryData) {
           // Transform category data to match expected format
@@ -50,12 +83,10 @@ export default function CategoryPage() {
           })
         }
 
-        setProducts(productsData)
         setError(null)
       } catch (err) {
         console.error('Error fetching category data:', err)
-        setError('Failed to load category products')
-        setProducts([])
+        setError('Failed to load category')
         setCategory(null)
       } finally {
         setLoading(false)
@@ -63,7 +94,17 @@ export default function CategoryPage() {
     }
 
     fetchCategoryData()
-  }, [id, pincode])
+  }, [id])
+
+  // Fetch products when category, subcategory, or pincode changes
+  useEffect(() => {
+    fetchProducts()
+  }, [id, selectedSubcategory, pincode])
+
+  // Handle subcategory selection
+  const handleSubcategoryChange = (subcategoryName: string | null) => {
+    setSelectedSubcategory(subcategoryName)
+  }
 
   const sortedProducts = products.sort((a, b) => {
     switch (sortBy) {
@@ -134,13 +175,19 @@ export default function CategoryPage() {
               />
             )}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{category.category_name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {category.category_name}
+                {selectedSubcategory && (
+                  <span className="text-2xl text-gray-600 font-normal"> / {selectedSubcategory}</span>
+                )}
+              </h1>
               {category.description && (
                 <p className="text-gray-600 mt-1">{category.description}</p>
               )}
               <p className="text-sm text-gray-500 mt-2">
                 {products.length} {products.length === 1 ? 'product' : 'products'} found
-                {pincode && ` in ${pincode}`}
+                {selectedSubcategory && ` in ${selectedSubcategory}`}
+                {pincode && ` for ${pincode}`}
               </p>
             </div>
           </div>
@@ -258,52 +305,79 @@ export default function CategoryPage() {
 
       {/* Products Grid/List */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {sortedProducts.length > 0 ? (
-          <div className={`${
-            viewMode === 'grid'
-              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-              : 'space-y-4'
-          }`}>
-            {sortedProducts.map((product) => {
-              const primaryImage = product.images?.find(img => img.is_primary)?.image_url
-              const fallbackImage = product.images?.[0]?.image_url
+        <div className="lg:flex lg:space-x-8">
+          {/* Left Sidebar - SubCategory Carousel (Desktop) */}
+          <div className="hidden lg:block lg:w-64 lg:flex-shrink-0">
+            {category && (
+              <SubCategoryCarousel
+                categoryId={category.category_id}
+                currentSubCategory={currentSubCategory}
+                onSubcategoryChange={handleSubcategoryChange}
+              />
+            )}
+          </div>
 
-              return (
-                <div key={product.product_id} className={viewMode === 'list' ? 'bg-white rounded-lg shadow-sm' : ''}>
-                  <ProductCard
-                    product_id={product.product_id}
-                    product_name={product.product_name}
-                    base_price={product.base_price}
-                    discounted_price={product.discounted_price}
-                    image_url={primaryImage || fallbackImage}
-                    category_name={product.category_name}
-                    status={product.status}
-                  />
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <div className="max-w-md mx-auto">
-              <div className="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
-                <Grid className="h-12 w-12 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-              <p className="text-gray-500 mb-6">
-                {pincode
-                  ? `No products available in ${category.category_name} for pincode ${pincode}`
-                  : `No products available in ${category.category_name} category`}
-              </p>
-              <button
-                onClick={() => navigate('/')}
-                className="btn-primary"
-              >
-                Browse Other Categories
-              </button>
+          {/* Main Content */}
+          <div className="lg:flex-1">
+            {/* SubCategory Carousel (Mobile - above products) */}
+            <div className="lg:hidden mb-6">
+              {category && (
+                <SubCategoryCarousel
+                  categoryId={category.category_id}
+                  currentSubCategory={currentSubCategory}
+                  onSubcategoryChange={handleSubcategoryChange}
+                />
+              )}
             </div>
+
+            {sortedProducts.length > 0 ? (
+              <div className={`${
+                viewMode === 'grid'
+                  ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4'
+                  : 'space-y-4'
+              }`}>
+                {sortedProducts.map((product) => {
+                  const primaryImage = product.images?.find(img => img.is_primary)?.image_url
+                  const fallbackImage = product.images?.[0]?.image_url
+
+                  return (
+                    <div key={product.product_id} className={viewMode === 'list' ? 'bg-white rounded-lg shadow-sm' : ''}>
+                      <ProductCard
+                        product_id={product.product_id}
+                        product_name={product.product_name}
+                        base_price={product.base_price}
+                        discounted_price={product.discounted_price}
+                        image_url={primaryImage || fallbackImage}
+                        category_name={product.category_name}
+                        status={product.status}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <div className="max-w-md mx-auto">
+                  <div className="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
+                    <Grid className="h-12 w-12 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+                  <p className="text-gray-500 mb-6">
+                    {pincode
+                      ? `No products available in ${category?.category_name} for pincode ${pincode}`
+                      : `No products available in ${category?.category_name} category`}
+                  </p>
+                  <button
+                    onClick={() => navigate('/')}
+                    className="btn-primary"
+                  >
+                    Browse Other Categories
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
