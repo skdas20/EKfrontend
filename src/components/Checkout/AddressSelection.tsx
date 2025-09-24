@@ -19,12 +19,12 @@ interface Address {
 
 interface AddressSelectionProps {
   selectedAddress: Address | null
-  onAddressSelect: (address: Address) => void
+  onAddressSelect: (address: Address | null) => void
   onNext: () => void
-  onBack: () => void
+  onBack?: () => void
 }
 
-export default function AddressSelection({ selectedAddress, onAddressSelect, onNext, onBack }: AddressSelectionProps) {
+export default function AddressSelection({ selectedAddress, onAddressSelect, onNext, onBack: _onBack }: AddressSelectionProps) {
   const [addresses, setAddresses] = useState<Address[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)

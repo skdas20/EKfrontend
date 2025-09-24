@@ -41,7 +41,7 @@ export default function FeaturedBanner() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {banners.slice(0, 3).map((banner, index) => (
+          {banners.slice(0, 3).map((banner, _index) => (
             <div key={banner.banner_id} className="group relative overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow">
               <div className="aspect-w-16 aspect-h-10">
                 <img

@@ -263,9 +263,10 @@ const EasyKiranaLogoSVG = ({
 
 interface LoadingPageProps {
   showLogo?: boolean;
+  message?: string;
 }
 
-export default function LoadingPage({ showLogo = true }: LoadingPageProps) {
+export default function LoadingPage({ showLogo = true, message }: LoadingPageProps) {
   const [easy, setEasy] = useState("");
   const [kirana, setKirana] = useState("");
   const [cursorOn, setCursorOn] = useState<"easy" | "kirana" | "none">("easy");
@@ -312,6 +313,9 @@ export default function LoadingPage({ showLogo = true }: LoadingPageProps) {
           cursorOn={cursorOn}
           className="mx-auto select-none"
         />
+      )}
+      {message && (
+        <div className="absolute bottom-8 text-sm text-gray-600">{message}</div>
       )}
     </div>
   );

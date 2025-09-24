@@ -8,7 +8,7 @@ interface PincodeModalProps {
   isFirstTime?: boolean
 }
 
-export default function PincodeModal({ isOpen, onClose, isFirstTime = false }: PincodeModalProps) {
+export default function PincodeModal({ isOpen, onClose, isFirstTime: _isFirstTime = false }: PincodeModalProps) {
   const [inputPincode, setInputPincode] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)

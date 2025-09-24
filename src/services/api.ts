@@ -128,7 +128,15 @@ export const categoryAPI = {
       return await apiFetch<Category[]>(url)
     } catch (error) {
       console.warn('Using fallback categories data')
-      return fallbackCategories
+      // Map InternalCategory -> Category shape expected by consumers
+      return fallbackCategories.map((c) => ({
+        id: c.category_id,
+        name: c.category_name,
+        description: c.description,
+        imageUrl: c.image_url,
+        level: 1,
+        createdAt: c.created_at,
+      }))
     }
   },
 

@@ -1,4 +1,4 @@
-import { ShoppingCart, Plus, Minus } from 'lucide-react'
+import { Plus, Minus } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
@@ -11,7 +11,7 @@ interface ProductCardProps {
   base_price: number
   discounted_price?: number | null
   image_url: string | null
-  category_name: string 
+  category_name?: string
   status: 'active' | 'inactive'
 }
 
@@ -21,7 +21,6 @@ export default function ProductCard({
   base_price,
   discounted_price,
   image_url,
-  category_name,
   status
 }: ProductCardProps) {
   const navigate = useNavigate()

@@ -1,4 +1,4 @@
-import type { Product, Category, Banner } from '../types/api'
+import type { Product, InternalCategory, Banner } from '../types/api'
 
 // Fallback products when API is offline
 export const fallbackProducts: Product[] = [
@@ -74,7 +74,7 @@ export const fallbackProducts: Product[] = [
 ]
 
 // Fallback categories when API is offline
-export const fallbackCategories: Category[] = [
+export const fallbackCategories: InternalCategory[] = [
   {
     category_id: 1,
     category_name: 'Fresh Fruits',

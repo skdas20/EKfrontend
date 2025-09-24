@@ -52,8 +52,8 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('cart')
   const [selectedAddress, setSelectedAddress] = useState<any>(null)
   const [orderData, setOrderData] = useState<any>(null)
-  const { state } = useCart()
-  const { user } = useAuth()
+  const { state: _state } = useCart()
+  const { user: _user } = useAuth()
 
   // Reset to first step when modal opens
   useEffect(() => {
