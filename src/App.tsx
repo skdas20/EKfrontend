@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage'
 import ProductDetailsPage from './pages/ProductDetailsPage'
 import CategoryPage from './pages/CategoryPage'
 import CheckoutPage from './pages/CheckoutPage'
+import AddressPage from './pages/AddressPage'
 import ScrollToTop from './components/ScrollToTop'
 import PincodeModal from './components/Location/PincodeModal'
 import LoadingPage from './components/Loading/LoadingPage'
@@ -45,6 +46,7 @@ function AppContent() {
           <Route path="/product/:id" element={<ProductDetailsPage />} />
           <Route path="/category/:id" element={<CategoryPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/addresses" element={<AddressPage />} />
         </Routes>
       </Layout>
       <PincodeModal

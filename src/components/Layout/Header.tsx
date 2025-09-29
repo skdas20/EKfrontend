@@ -1,5 +1,6 @@
-import { ShoppingCart, Search, User, LogOut, MapPin, Package, X, Home, HelpCircle, Smartphone } from 'lucide-react'
+import { ShoppingCart, User, LogOut, MapPin, Package, X, Home, HelpCircle, Smartphone } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
 import { useLocation } from '../../context/LocationContext'
@@ -7,7 +8,7 @@ import CartDrawer from '../Cart/CartDrawer'
 import LoginModal from '../Auth/LoginModal'
 import PincodeModal from '../Location/PincodeModal'
 import OrderHistory from '../Orders/OrderHistory'
-import SavedAddresses from '../Address/SavedAddresses'
+import SearchBar from '../Search/SearchBar'
 
 /* ===========================================
    EasyKirana SVG Logo for Header (with shine)
@@ -147,7 +148,7 @@ export default function Header() {
   const [isPincodeOpen, setIsPincodeOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showOrderHistory, setShowOrderHistory] = useState(false)
-  const [showSavedAddresses, setShowSavedAddresses] = useState(false)
+  const navigate = useNavigate()
   const { state } = useCart()
   const { user, logout, isLoginModalOpen, showLoginModal, hideLoginModal } = useAuth()
   const { pincode } = useLocation()
@@ -213,15 +214,16 @@ export default function Header() {
     }
   }, [showUserMenu])
 
-  // Prevent body scroll when modals are open
+  // Prevent body scroll when smaller modals are open (but allow full-page Order History to scroll)
   useEffect(() => {
-    if (showOrderHistory || showSavedAddresses) {
+    // We want the Order History to behave like a full page — allow body scroll.
+    if (isPincodeOpen || isLoginModalOpen) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'unset'
     }
     return () => { document.body.style.overflow = 'unset' }
-  }, [showOrderHistory, showSavedAddresses])
+  }, [isPincodeOpen, isLoginModalOpen])
 
   return (
     <header className="sticky top-0 z-40 bg-white shadow-sm border-b border-cream-200">
@@ -247,14 +249,7 @@ export default function Header() {
 
           {/* Search Bar - Desktop */}
           <div className="flex-1 max-w-lg mx-8 hidden md:flex items-center">
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="input-field pr-10"
-              />
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            </div>
+            <SearchBar className="w-full" />
           </div>
 
           {/* Right Actions */}
@@ -350,7 +345,7 @@ export default function Header() {
 
                       <button
                         onClick={() => {
-                          setShowSavedAddresses(true)
+                          navigate('/addresses')
                           setShowUserMenu(false)
                         }}
                         className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -480,14 +475,7 @@ export default function Header() {
 
         {/* Mobile Search */}
         <div className="md:hidden py-3">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="input-field pr-10"
-            />
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          </div>
+          <SearchBar className="w-full" />
         </div>
       </div>
 
@@ -502,31 +490,28 @@ export default function Header() {
         isFirstTime={false}
       />
 
-      {/* Order History Modal */}
+      {/* Order History — render as a full page so it can scroll naturally */}
       {showOrderHistory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-transparent">
-          <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-white overflow-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex items-center justify-between sticky top-0 bg-white z-20 py-3 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-900">My Orders</h2>
               <button
                 onClick={() => setShowOrderHistory(false)}
                 className="text-gray-400 hover:text-gray-600 p-2"
+                aria-label="Close order history"
               >
                 <X className="h-6 w-6" />
               </button>
             </div>
-            <div className="flex-1 overflow-hidden">
+
+            <div className="mt-4">
               <OrderHistory onClose={() => setShowOrderHistory(false)} />
             </div>
           </div>
         </div>
       )}
 
-      {/* Saved Addresses Modal */}
-      <SavedAddresses
-        isOpen={showSavedAddresses}
-        onClose={() => setShowSavedAddresses(false)}
-      />
     </header>
   )
 }

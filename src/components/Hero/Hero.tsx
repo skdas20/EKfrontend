@@ -72,11 +72,15 @@ export default function Hero() {
                   Quality products from trusted local vendors.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button className="btn-primary-gradient">
+                  <button
+                    onClick={() => {
+                      const categorySection = document.querySelector('[data-section="categories"]') ||
+                                           document.querySelector('section[class*="bg-brand-50"]')
+                      categorySection?.scrollIntoView({ behavior: 'smooth' })
+                    }}
+                    className="btn-primary-gradient"
+                  >
                     Shop Now
-                  </button>
-                  <button className="btn-secondary">
-                    Browse Categories
                   </button>
                 </div>
               </>
@@ -126,13 +130,17 @@ export default function Hero() {
                   Shop Now
                 </a>
               ) : (
-                <button className="btn-primary-gradient">
+                <button
+                  onClick={() => {
+                    const categorySection = document.querySelector('[data-section="categories"]') ||
+                                         document.querySelector('section[class*="bg-brand-50"]')
+                    categorySection?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                  className="btn-primary-gradient"
+                >
                   Shop Now
                 </button>
               )}
-              <button className="btn-secondary bg-white/10 border-white text-white hover:bg-white hover:text-gray-900">
-                Browse Categories
-              </button>
             </div>
           </div>
         </div>

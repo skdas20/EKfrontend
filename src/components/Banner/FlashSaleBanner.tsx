@@ -3,9 +3,54 @@ import { Clock, Zap } from 'lucide-react'
 import { bannerAPI } from '../../services/api'
 import type { Banner } from '../../types/api'
 
+interface TimeRemaining {
+  days: number
+  hours: number
+  minutes: number
+  seconds: number
+  isExpired: boolean
+}
+
 export default function FlashSaleBanner() {
   const [banners, setBanners] = useState<Banner[]>([])
   const [loading, setLoading] = useState(true)
+  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    isExpired: false
+  })
+
+  // Function to calculate time remaining
+  const calculateTimeRemaining = (endDate: string): TimeRemaining => {
+    const now = new Date().getTime()
+    const end = new Date(endDate).getTime()
+    const difference = end - now
+
+    if (difference <= 0) {
+      return {
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+        isExpired: true
+      }
+    }
+
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60))
+    const seconds = Math.floor((difference % (1000 * 60)) / 1000)
+
+    return {
+      days,
+      hours,
+      minutes,
+      seconds,
+      isExpired: false
+    }
+  }
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -24,11 +69,42 @@ export default function FlashSaleBanner() {
     fetchBanners()
   }, [])
 
-  if (loading || banners.length === 0) {
+  // Timer effect - updates every second
+  useEffect(() => {
+    if (banners.length === 0) return
+
+    const banner = banners[0]
+
+    // Initial calculation
+    setTimeRemaining(calculateTimeRemaining(banner.end_date))
+
+    // Set up interval to update every second
+    const interval = setInterval(() => {
+      const remaining = calculateTimeRemaining(banner.end_date)
+      setTimeRemaining(remaining)
+
+      // Clear interval if expired
+      if (remaining.isExpired) {
+        clearInterval(interval)
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [banners])
+
+  if (loading || banners.length === 0 || timeRemaining.isExpired) {
     return null
   }
 
   const banner = banners[0]
+
+  // Format timer display - show days if > 0, otherwise show hours:minutes:seconds
+  const formatTimer = () => {
+    if (timeRemaining.days > 0) {
+      return `${timeRemaining.days}d ${timeRemaining.hours.toString().padStart(2, '0')}:${timeRemaining.minutes.toString().padStart(2, '0')}:${timeRemaining.seconds.toString().padStart(2, '0')}`
+    }
+    return `${timeRemaining.hours.toString().padStart(2, '0')}:${timeRemaining.minutes.toString().padStart(2, '0')}:${timeRemaining.seconds.toString().padStart(2, '0')}`
+  }
 
   return (
     <section className="py-6">
@@ -59,11 +135,18 @@ export default function FlashSaleBanner() {
                 <div className="bg-white/80 backdrop-blur rounded-lg p-4 mb-3">
                   <div className="flex items-center justify-center space-x-2 text-gray-900 mb-2">
                     <Clock className="h-5 w-5" />
-                    <span className="text-sm font-medium">Ends Soon</span>
+                    <span className="text-sm font-medium">
+                      {timeRemaining.days > 0 ? 'Ends In' : 'Ends Soon'}
+                    </span>
                   </div>
                   <div className="text-2xl font-bold text-gray-900">
-                    24:00:00
+                    {formatTimer()}
                   </div>
+                  {timeRemaining.days > 0 && (
+                    <div className="text-xs text-gray-600 mt-1">
+                      {timeRemaining.days} day{timeRemaining.days !== 1 ? 's' : ''} remaining
+                    </div>
+                  )}
                 </div>
                 
                 {banner.redirect_url && (

@@ -135,7 +135,7 @@ export default function CheckoutPage() {
 
             {/* Step Progress */}
             <div className="mt-6">
-              <div className="flex items-center space-x-4">
+              <div className="grid grid-cols-4 gap-4">
                 {steps.map((step, index) => {
                   const isActive = step.id === currentStep
                   const isCompleted = index < currentStepIndex
@@ -143,30 +143,26 @@ export default function CheckoutPage() {
                   const Icon = step.icon
 
                   return (
-                    <div key={step.id} className="flex items-center">
-                      <button
-                        onClick={() => goToStep(step.id)}
-                        disabled={!isAccessible}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                          isActive
-                            ? 'bg-cream-100 text-brand-700 border border-cream-300'
-                            : isCompleted
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                            : isAccessible
-                            ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            : 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                        }`}
-                      >
-                        <Icon className="h-5 w-5" />
-                        <div className="text-left">
-                          <div className="font-medium text-sm">{step.title}</div>
-                          <div className="text-xs opacity-75">{step.description}</div>
-                        </div>
-                      </button>
-                      {index < steps.length - 1 && (
-                        <ArrowRight className="h-4 w-4 text-gray-400 mx-3" />
-                      )}
-                    </div>
+                    <button
+                      key={step.id}
+                      onClick={() => goToStep(step.id)}
+                      disabled={!isAccessible}
+                      className={`flex flex-col items-center space-y-2 px-4 py-4 rounded-lg transition-colors h-20 ${
+                        isActive
+                          ? 'bg-cream-100 text-brand-700 border border-cream-300'
+                          : isCompleted
+                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                          : isAccessible
+                          ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <div className="text-center">
+                        <div className="font-medium text-sm leading-tight">{step.title}</div>
+                        <div className="text-xs opacity-75 leading-tight">{step.description}</div>
+                      </div>
+                    </button>
                   )
                 })}
               </div>

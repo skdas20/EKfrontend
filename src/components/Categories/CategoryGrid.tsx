@@ -1,21 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Apple, Wheat, Milk, Package, ShoppingCart, Coffee, Beef, Fish } from 'lucide-react'
 import { categoryAPI } from '../../services/api'
 import type { InternalCategory } from '../../types/api'
 
-// Map category names to appropriate icons
-const getCategoryIcon = (categoryName: string) => {
-  const name = categoryName.toLowerCase()
-  if (name.includes('fruit')) return Apple
-  if (name.includes('vegetable')) return Package
-  if (name.includes('grain') || name.includes('rice') || name.includes('wheat')) return Wheat
-  if (name.includes('dairy') || name.includes('milk')) return Milk
-  if (name.includes('meat') || name.includes('chicken')) return Beef
-  if (name.includes('fish') || name.includes('seafood')) return Fish
-  if (name.includes('beverage') || name.includes('drink')) return Coffee
-  return ShoppingCart // Default icon
-}
 
 // Fallback image mapping
 const getCategoryImage = (categoryName: string) => {
@@ -117,7 +104,7 @@ export default function CategoryGrid() {
   }
 
   return (
-    <section className="py-16 bg-brand-50">
+    <section data-section="categories" className="py-16 bg-brand-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Shop by Category</h2>
@@ -127,7 +114,6 @@ export default function CategoryGrid() {
         {categories.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {categories.slice(0, 8).map((category) => {
-              const Icon = getCategoryIcon(category.category_name)
               const imageUrl = category.image_url || getCategoryImage(category.category_name)
               
               return (
@@ -147,11 +133,6 @@ export default function CategoryGrid() {
                         img.src = getCategoryImage(category.category_name)
                       }}
                     />
-                    {/* light overlay for better text contrast on some images */}
-                    <div className="absolute inset-0 bg-white/30 group-hover:bg-white/40 transition-all duration-200" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Icon className="h-8 w-8 text-brand-700" />
-                    </div>
                   </div>
                   <div className="p-4 text-center">
                     <h3 className="font-semibold text-gray-900 mb-1">{category.category_name}</h3>

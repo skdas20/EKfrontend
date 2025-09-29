@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Plus, Minus, ShoppingCart, Star, Heart, Share2, Truck, Shield, Clock } from 'lucide-react'
+import { ArrowLeft, Plus, Minus, ShoppingCart, Heart, Share2, Truck, Shield, Clock } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { LoadingSpinner } from '../components/Loading/LoadingPage'
@@ -213,15 +213,6 @@ export default function ProductDetailsPage() {
                   )}
                 </div>
 
-                {/* Rating placeholder */}
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <span className="text-sm text-gray-600">(4.5) • 127 reviews</span>
-                </div>
               </div>
 
               {/* Variants */}
