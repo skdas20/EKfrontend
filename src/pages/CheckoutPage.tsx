@@ -48,9 +48,17 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('cart')
   const [selectedAddress, setSelectedAddress] = useState<any>(null)
   const [orderData, setOrderData] = useState<any>(null)
+  const [customerEmail, setCustomerEmail] = useState<string>('')
   const { state } = useCart()
   const { user } = useAuth()
   const navigate = useNavigate()
+
+  // Pre-fill email from user profile if available
+  useEffect(() => {
+    if (user?.email) {
+      setCustomerEmail(user.email)
+    }
+  }, [user?.email])
 
   // Redirect to home if not logged in or cart is empty
   useEffect(() => {
@@ -181,6 +189,8 @@ export default function CheckoutPage() {
               <AddressSelection
                 selectedAddress={selectedAddress}
                 onAddressSelect={setSelectedAddress}
+                customerEmail={customerEmail}
+                onEmailChange={setCustomerEmail}
                 onNext={goToNextStep}
                 onBack={goToPreviousStep}
               />
@@ -188,6 +198,7 @@ export default function CheckoutPage() {
             {currentStep === 'summary' && (
               <OrderSummary
                 selectedAddress={selectedAddress}
+                customerEmail={customerEmail}
                 onBack={goToPreviousStep}
                 onOrderComplete={handleOrderComplete}
               />

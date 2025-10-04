@@ -42,12 +42,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
 
-  // Check for existing auth on mount
+  // Helper function to check if token is expired
+  const isTokenExpired = (token: string): boolean => {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const currentTime = Date.now() / 1000
+      return payload.exp < currentTime
+    } catch (error) {
+      console.error('Error parsing token:', error)
+      return true // Treat invalid tokens as expired
+    }
+  }
+
+  // Check for existing auth on mount and validate token
   useEffect(() => {
     const savedToken = localStorage.getItem('auth_token')
     const savedUser = localStorage.getItem('user_data')
     
     if (savedToken && savedUser) {
+      // Check if token is expired
+      if (isTokenExpired(savedToken)) {
+        console.log('Stored token is expired, clearing auth data')
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('user_data')
+        setToken(null)
+        setUser(null)
+        return
+      }
+
       setToken(savedToken)
       try {
         setUser(JSON.parse(savedUser))
@@ -56,6 +78,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.removeItem('auth_token')
         localStorage.removeItem('user_data')
       }
+    }
+
+    // Listen for global logout events (from API errors)
+    const handleGlobalLogout = () => {
+      console.log('Global logout event received')
+      setUser(null)
+      setToken(null)
+    }
+
+    window.addEventListener('auth:logout', handleGlobalLogout)
+    
+    return () => {
+      window.removeEventListener('auth:logout', handleGlobalLogout)
     }
   }, [])
 

@@ -20,11 +20,13 @@ interface Address {
 interface AddressSelectionProps {
   selectedAddress: Address | null
   onAddressSelect: (address: Address | null) => void
+  customerEmail: string
+  onEmailChange: (email: string) => void
   onNext: () => void
   onBack?: () => void
 }
 
-export default function AddressSelection({ selectedAddress, onAddressSelect, onNext, onBack: _onBack }: AddressSelectionProps) {
+export default function AddressSelection({ selectedAddress, onAddressSelect, customerEmail, onEmailChange, onNext, onBack: _onBack }: AddressSelectionProps) {
   const [addresses, setAddresses] = useState<Address[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -340,6 +342,21 @@ export default function AddressSelection({ selectedAddress, onAddressSelect, onN
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
+          </div>
+
+          {/* Email field for order updates */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email Address
+              <span className="text-xs text-gray-500 ml-1">(for order updates)</span>
+            </label>
+            <input
+              type="email"
+              value={customerEmail}
+              onChange={(e) => onEmailChange(e.target.value)}
+              placeholder="your.email@example.com"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
           </div>
 
           <div>

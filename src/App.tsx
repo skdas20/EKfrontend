@@ -13,6 +13,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { CartProvider } from './context/CartContext'
 import { LocationProvider } from './context/LocationContext'
 import { AuthProvider } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext'
 import { useLocation } from './context/LocationContext'
 
 function AppContent() {
@@ -69,7 +70,9 @@ function App() {
         <AuthProvider>
           <LocationProvider>
             <CartProvider>
-              <AppContent />
+              <ToastProvider>
+                <AppContent />
+              </ToastProvider>
             </CartProvider>
           </LocationProvider>
         </AuthProvider>

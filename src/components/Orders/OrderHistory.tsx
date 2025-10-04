@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Package, Clock, CheckCircle, XCircle, MapPin, Phone } from 'lucide-react'
+import { Package, Clock, CheckCircle, XCircle, MapPin, Phone, Star } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { orderAPI } from '../../services/api'
 import { LoadingSpinner } from '../Loading/LoadingPage'
 import { useCart } from '../../context/CartContext'
+import { useToast } from '../../context/ToastContext'
+import api from '../../services/api'
+import RatingModal from '../Reviews/RatingModal'
 
 interface Order {
   order_id: string
@@ -28,7 +31,20 @@ export default function OrderHistory({ onClose }: OrderHistoryProps) {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const { user, token } = useAuth()
   const { addItem, clearCart } = useCart()
+  const { showToast } = useToast()
   const [reordering, setReordering] = useState(false)
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null)
+  const [ratingModal, setRatingModal] = useState<{
+    isOpen: boolean
+    productId: string
+    productName: string
+    orderId: string
+  }>({
+    isOpen: false,
+    productId: '',
+    productName: '',
+    orderId: ''
+  })
 
   useEffect(() => {
     loadOrders()
@@ -161,6 +177,68 @@ export default function OrderHistory({ onClose }: OrderHistoryProps) {
     }
   }
 
+  const handleCancelOrder = async (orderId: string) => {
+    if (!token) return
+
+    // Confirm with user
+    const confirmCancel = window.confirm(
+      'Are you sure you want to cancel this order? This action cannot be undone.'
+    )
+    
+    if (!confirmCancel) return
+
+    try {
+      setCancellingOrderId(orderId)
+      await orderAPI.cancelOrder(token, orderId)
+      
+      // Reload orders to show updated status
+      await loadOrders()
+      
+      alert('Order cancelled successfully!')
+    } catch (error: any) {
+      console.error('Failed to cancel order:', error)
+      alert(error.message || 'Failed to cancel order. Please try again.')
+    } finally {
+      setCancellingOrderId(null)
+    }
+  }
+
+  const handleOpenRatingModal = (productId: string, productName: string, orderId: string) => {
+    setRatingModal({
+      isOpen: true,
+      productId,
+      productName,
+      orderId
+    })
+  }
+
+  const handleCloseRatingModal = () => {
+    setRatingModal({
+      isOpen: false,
+      productId: '',
+      productName: '',
+      orderId: ''
+    })
+  }
+
+  const handleSubmitReview = async (rating: number, comment: string) => {
+    if (!token) return
+
+    try {
+      await api.reviews.createReview(token, {
+        productId: ratingModal.productId,
+        orderId: ratingModal.orderId,
+        rating,
+        comment
+      })
+      
+      showToast('Review submitted successfully! It will be visible after admin approval.', 'success')
+    } catch (error: any) {
+      console.error('Failed to submit review:', error)
+      throw new Error(error.message || 'Failed to submit review')
+    }
+  }
+
   if (!user) {
     return (
       <div className="max-w-4xl mx-auto p-6 text-center">
@@ -234,13 +312,24 @@ export default function OrderHistory({ onClose }: OrderHistoryProps) {
                 {/* Order Items */}
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-3">Items ({order.items?.length || 0})</h3>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
                     {order.items?.map((item, index) => (
-                      <div key={index} className="flex justify-between text-sm">
-                        <span className="text-gray-600">
-                          {item.product_name} x {item.quantity}
-                        </span>
-                          <span className="font-medium">₹{Number(item.subtotal || 0).toFixed(2)}</span>
+                      <div key={index} className="flex justify-between items-start text-sm border-b border-gray-100 pb-2 last:border-0">
+                        <div className="flex-1">
+                          <span className="text-gray-600 block">
+                            {item.product_name} x {item.quantity}
+                          </span>
+                          {order.order_status === 'delivered' && (
+                            <button
+                              onClick={() => handleOpenRatingModal(item.product_id, item.product_name, order.order_id)}
+                              className="mt-1 text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1"
+                            >
+                              <Star size={12} />
+                              Rate Product
+                            </button>
+                          )}
+                        </div>
+                        <span className="font-medium">₹{Number(item.subtotal || 0).toFixed(2)}</span>
                       </div>
                     )) || (
                       <p className="text-sm text-gray-500">No items found</p>
@@ -292,9 +381,13 @@ export default function OrderHistory({ onClose }: OrderHistoryProps) {
                       {reordering ? 'Adding...' : 'Reorder'}
                     </button>
                   )}
-                  {order.order_status === 'pending' && (
-                    <button className="px-4 py-2 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
-                      Cancel Order
+                  {['pending', 'picked', 'out_for_delivery'].includes(order.order_status) && (
+                    <button 
+                      onClick={() => handleCancelOrder(order.order_id)}
+                      disabled={cancellingOrderId === order.order_id}
+                      className="px-4 py-2 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {cancellingOrderId === order.order_id ? 'Cancelling...' : 'Cancel Order'}
                     </button>
                   )}
                 </div>
@@ -335,6 +428,14 @@ export default function OrderHistory({ onClose }: OrderHistoryProps) {
           </div>
         ))}
       </div>
+
+      {/* Rating Modal */}
+      <RatingModal
+        isOpen={ratingModal.isOpen}
+        onClose={handleCloseRatingModal}
+        onSubmit={handleSubmitReview}
+        productName={ratingModal.productName}
+      />
     </div>
   )
 }

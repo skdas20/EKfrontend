@@ -10,10 +10,33 @@ import type {
 } from '../types/api'
 
 // API Base Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://103.181.200.66:3000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 
-// Generic API fetch function
-async function apiFetch<T>(url: string): Promise<T> {
+// Global flag to prevent multiple logout calls
+let isLoggingOut = false
+
+// Function to handle auth errors globally
+const handleAuthError = () => {
+  if (isLoggingOut) return
+  
+  isLoggingOut = true
+  console.log('Token expired or unauthorized, logging out...')
+  
+  // Clear auth data
+  localStorage.removeItem('auth_token')
+  localStorage.removeItem('user_data')
+  
+  // Trigger custom event for AuthContext to handle
+  window.dispatchEvent(new CustomEvent('auth:logout'))
+  
+  // Reset flag after a short delay
+  setTimeout(() => {
+    isLoggingOut = false
+  }, 1000)
+}
+
+// Enhanced API fetch function with auth error handling
+async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -21,8 +44,15 @@ async function apiFetch<T>(url: string): Promise<T> {
         'Content-Type': 'application/json',
       },
       // Add timeout
-      signal: AbortSignal.timeout(10000) // 10 second timeout
+      signal: AbortSignal.timeout(10000), // 10 second timeout
+      ...options
     })
+    
+    // Handle auth errors
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
@@ -201,6 +231,12 @@ export const cartAPI = {
         'Authorization': `Bearer ${token}`
       }
     })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -222,6 +258,12 @@ export const cartAPI = {
         quantity 
       })
     })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -239,6 +281,12 @@ export const cartAPI = {
       },
       body: JSON.stringify({ quantity })
     })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -255,6 +303,12 @@ export const cartAPI = {
         'Authorization': `Bearer ${token}`
       }
     })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -271,6 +325,12 @@ export const cartAPI = {
         'Authorization': `Bearer ${token}`
       }
     })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -320,6 +380,12 @@ export const orderAPI = {
       },
       body: JSON.stringify(orderData)
     })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -342,6 +408,11 @@ export const orderAPI = {
     
     console.log('orderAPI.getUserOrders: response status =', response.status)
     
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       const errorText = await response.text()
       console.log('orderAPI.getUserOrders: error response =', errorText)
@@ -363,8 +434,37 @@ export const orderAPI = {
         'Authorization': `Bearer ${token}`
       }
     })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response.json()
+  },
+
+  // Cancel order (customer can cancel until delivered)
+  async cancelOrder(token: string, orderId: string): Promise<any> {
+    const url = buildApiUrl(`/orders/${orderId}/cancel`)
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || `Failed to cancel order`)
     }
     return response.json()
   }
@@ -382,6 +482,12 @@ export const addressAPI = {
         'Authorization': `Bearer ${token}`
       }
     })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -399,6 +505,12 @@ export const addressAPI = {
       },
       body: JSON.stringify(addressData)
     })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -416,6 +528,12 @@ export const addressAPI = {
       },
       body: JSON.stringify(addressData)
     })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -432,6 +550,12 @@ export const addressAPI = {
         'Authorization': `Bearer ${token}`
       }
     })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -448,8 +572,111 @@ export const addressAPI = {
         'Authorization': `Bearer ${token}`
       }
     })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response.json()
+  }
+}
+
+// Review API
+const reviewAPI = {
+  // Create a new review (customer)
+  async createReview(token: string, reviewData: {
+    productId: string
+    orderId: string
+    rating: number
+    comment?: string
+  }): Promise<any> {
+    const url = buildApiUrl('/reviews')
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        product_id: reviewData.productId,
+        order_id: reviewData.orderId,
+        rating: reviewData.rating,
+        comment: reviewData.comment
+      })
+    })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Failed to submit review')
+    }
+    return response.json()
+  },
+
+  // Get all approved reviews for a product (public)
+  async getProductReviews(productId: string): Promise<any> {
+    const url = buildApiUrl(`/reviews/product/${productId}`)
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch reviews`)
+    }
+    return response.json()
+  },
+
+  // Get customer's own reviews
+  async getMyReviews(token: string): Promise<any> {
+    const url = buildApiUrl('/reviews/my-reviews')
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch your reviews`)
+    }
+    return response.json()
+  },
+
+  // Check if customer can review a specific product from an order
+  async canReviewProduct(token: string, orderId: string, productId: string): Promise<any> {
+    const url = buildApiUrl(`/reviews/can-review/${orderId}/${productId}`)
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (response.status === 401) {
+      handleAuthError()
+      throw new Error('Authentication failed - please login again')
+    }
+    
+    if (!response.ok) {
+      return { canReview: false }
     }
     return response.json()
   }
@@ -463,7 +690,8 @@ export const api = {
   cart: cartAPI,
   auth: authAPI,
   orders: orderAPI,
-  addresses: addressAPI
+  addresses: addressAPI,
+  reviews: reviewAPI
 }
 
 export default api

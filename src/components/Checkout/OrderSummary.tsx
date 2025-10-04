@@ -7,6 +7,7 @@ import { LoadingSpinner } from '../Loading/LoadingPage'
 
 interface OrderSummaryProps {
   selectedAddress: any
+  customerEmail: string
   onBack: () => void
   onOrderComplete: (order: any) => void
 }
@@ -28,7 +29,7 @@ const paymentMethods = [
   }
 ]
 
-export default function OrderSummary({ selectedAddress, onBack, onOrderComplete }: OrderSummaryProps) {
+export default function OrderSummary({ selectedAddress, customerEmail, onBack, onOrderComplete }: OrderSummaryProps) {
   const [selectedPayment, setSelectedPayment] = useState('cod')
   const [placingOrder, setPlacingOrder] = useState(false)
   const [orderNotes, setOrderNotes] = useState('')
@@ -65,9 +66,17 @@ export default function OrderSummary({ selectedAddress, onBack, onOrderComplete 
         total_amount: totalAmount,
         delivery_address_id: selectedAddress.address_id,
         order_type: 'online',
-        notes: orderNotes
+        notes: orderNotes,
+        customer_email: (customerEmail && customerEmail.trim() !== '') ? customerEmail.trim() : undefined,
+        customer_name: selectedAddress?.full_name || undefined
       }
 
+      console.log('📧 Email check before order creation:', {
+        customerEmail: customerEmail,
+        customerEmailInData: orderData.customer_email,
+        isEmpty: !customerEmail,
+        isUndefined: orderData.customer_email === undefined
+      })
       console.log('Creating order with data:', orderData)
       
       const response = await orderAPI.createOrder(token, orderData)

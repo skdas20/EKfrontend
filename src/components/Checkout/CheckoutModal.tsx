@@ -51,15 +51,17 @@ const steps: StepInfo[] = [
 export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('cart')
   const [selectedAddress, setSelectedAddress] = useState<any>(null)
+  const [customerEmail, setCustomerEmail] = useState<string>('')
   const [orderData, setOrderData] = useState<any>(null)
   const { state: _state } = useCart()
-  const { user: _user } = useAuth()
+  const { user } = useAuth()
 
-  // Reset to first step when modal opens
+  // Reset to first step when modal opens, pre-fill email from user profile
   useEffect(() => {
     if (isOpen) {
       setCurrentStep('cart')
       setSelectedAddress(null)
+      setCustomerEmail(user?.email || '')
       setOrderData(null)
       document.body.style.overflow = 'hidden'
     } else {
@@ -70,7 +72,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
     return () => {
       document.body.style.overflow = 'unset'
     }
-  }, [isOpen])
+  }, [isOpen, user?.email])
 
   const getCurrentStepIndex = () => {
     return steps.findIndex(step => step.id === currentStep)
@@ -195,6 +197,8 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
             <AddressSelection
               selectedAddress={selectedAddress}
               onAddressSelect={setSelectedAddress}
+              customerEmail={customerEmail}
+              onEmailChange={setCustomerEmail}
               onNext={goToNextStep}
               onBack={goToPreviousStep}
             />
@@ -202,6 +206,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
           {currentStep === 'summary' && (
             <OrderSummary
               selectedAddress={selectedAddress}
+              customerEmail={customerEmail}
               onBack={goToPreviousStep}
               onOrderComplete={handleOrderComplete}
             />

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Plus, Minus, ShoppingCart, Heart, Share2, Truck, Shield, Clock } from 'lucide-react'
+import { ArrowLeft, Plus, Minus, ShoppingCart, Truck, Shield, Clock } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { LoadingSpinner } from '../components/Loading/LoadingPage'
 import { productAPI } from '../services/api'
+import ProductReviews from '../components/Reviews/ProductReviews'
 import type { Product, ProductVariant } from '../types/api'
 
 export default function ProductDetailsPage() {
@@ -288,17 +289,6 @@ export default function ProductDetailsPage() {
                     </>
                   )}
                 </button>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <button className="py-3 px-4 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2">
-                    <Heart className="h-5 w-5" />
-                    <span>Wishlist</span>
-                  </button>
-                  <button className="py-3 px-4 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2">
-                    <Share2 className="h-5 w-5" />
-                    <span>Share</span>
-                  </button>
-                </div>
               </div>
 
               {/* Features */}
@@ -337,6 +327,11 @@ export default function ProductDetailsPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Product Reviews Section */}
+        <div className="mt-8">
+          <ProductReviews productId={String(product.product_id)} />
         </div>
       </div>
     </div>

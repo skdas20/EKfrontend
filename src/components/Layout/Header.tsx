@@ -178,6 +178,16 @@ export default function Header() {
     }
   }, [])
 
+  // Auto-open OrderHistory if URL has ?view=orders (from email track links)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('view') === 'orders' && user) {
+      setShowOrderHistory(true)
+      // Clean up URL without page reload
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [user])
+
   useEffect(() => {
     if (!showUserMenu) return
     const onPointerMove = (e: PointerEvent) => {
