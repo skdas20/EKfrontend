@@ -21,7 +21,7 @@ export default function SearchBar({ className = '', placeholder = 'Search produc
   const { pincode } = useLocation()
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Handle search with debouncing
   useEffect(() => {
