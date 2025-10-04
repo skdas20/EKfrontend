@@ -9,8 +9,8 @@ import type {
   ProductFilters
 } from '../types/api'
 
-// API Base Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+// API configuration
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.easykirana.in/api'
 
 // Global flag to prevent multiple logout calls
 let isLoggingOut = false

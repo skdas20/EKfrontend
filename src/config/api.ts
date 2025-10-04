@@ -1,5 +1,5 @@
 // API Configuration
-export const API_BASE_URL = 'http://localhost:3000/api'
+export const API_BASE_URL = 'https://api.easykirana.in/api'
 
 // API endpoints
 export const API_ENDPOINTS = {
